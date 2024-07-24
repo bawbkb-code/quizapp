@@ -1,5 +1,8 @@
 {
   "expo": {
+    "expo": {
+    "entryPoint": "./questions/index.js"
+    },
     "name": "QuizApp",
     "slug": "QuizApp",
     "version": "1.0.0",
