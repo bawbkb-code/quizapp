@@ -4,29 +4,32 @@ interface Score {
   taken_at: string;
 }
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useFocusEffect } from 'expo-router';
 
 const LeaderBoardScreen = () => {
   const [scores, setScores] = useState<Score[]>([]);
   const [loading, setLoading] = useState(true);
+  const fetchScores = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/scores');
+      setScores(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching scores:', error);
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => {
-    const fetchScores = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/scores');
-        setScores(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching scores:', error);
-        setLoading(false);
-      }
-    };
+  useFocusEffect(
+    useCallback(() => {
+        fetchScores();
+    }, [])
+  );
 
-    fetchScores();
-  }, []);
 
   const getTrophyIcon = (index: number) => {
     switch (index) {

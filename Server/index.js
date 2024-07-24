@@ -22,7 +22,6 @@ app.get('/questions', async (req, res) => {
       question.answers = answersResult.rows;
     }
 
-    // Shuffle questions and take first 20
     questions = shuffleArray(questions).slice(0, 20);
 
     res.json(questions);
@@ -41,9 +40,14 @@ app.post('/save-score', async (req, res) => {
     let userId;
     if (userResult.rows.length === 0) {
       userResult = await pool.query('INSERT INTO users (username) VALUES ($1) RETURNING user_id', [username]);
+      userId = userResult.rows[0].user_id;
+    } else {
+      userId = userResult.rows[0].user_id;
+      let scoreResult = await pool.query('SELECT * FROM scores WHERE user_id = $1', [userId]);
+      if (scoreResult.rows.length > 0) {
+        return res.status(400).send('User has already submitted a score');
+      }
     }
-    userId = userResult.rows[0].user_id;
-
 
     await pool.query('INSERT INTO scores (user_id, score) VALUES ($1, $2)', [userId, score]);
     res.send('Score saved');
@@ -52,6 +56,7 @@ app.post('/save-score', async (req, res) => {
     res.status(500).send('Error saving score');
   }
 });
+
 
 app.get('/scores', async (req, res) => {
   try {

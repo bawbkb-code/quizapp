@@ -10,9 +10,10 @@ interface Question {
   correct_answer: string;
   answers: Answer[];
 }
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import axios from 'axios';
+import { useFocusEffect } from 'expo-router';
 
 
 const shuffleArray = (array: any[]) => array.sort(() => Math.random() - 0.5);
@@ -23,23 +24,25 @@ const QuestionScreen = () => {
   const [score, setScore] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: string }>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const fetchQuestions = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/questions');
+      const data: Question[] = response.data;
+      data.forEach(question => {
+        question.answers = shuffleArray(question.answers);
+      });
+      setQuestions(data);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+    }
+  };
+  
+  useFocusEffect(
+    useCallback(() => {
+      fetchQuestions();
+    }, [])
+  );
 
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/questions');
-        const data: Question[] = response.data;
-        data.forEach(question => {
-          question.answers = shuffleArray(question.answers);
-        });
-        setQuestions(data);
-      } catch (error) {
-        console.error('Error fetching questions:', error);
-      }
-    };
-
-    fetchQuestions();
-  }, []);
 
   const handleAnswerPress = (questionId: number, answerText: string, isCorrect: boolean) => {
     setSelectedAnswers({ ...selectedAnswers, [questionId]: answerText });
@@ -58,18 +61,22 @@ const QuestionScreen = () => {
       setErrorMessage('Please enter your name');
       return;
     }
-
+  
     if (Object.keys(selectedAnswers).length !== questions.length) {
       setErrorMessage('Please answer all questions before submitting');
       return;
     }
-
+  
     try {
-      await axios.post('http://localhost:3000/save-score', { username: name, score });
+      const response = await axios.post('http://localhost:3000/save-score', { username: name, score });
       setErrorMessage('Score submitted successfully');
-    } catch (error) {
-      console.error('Error submitting score:', error);
-      setErrorMessage('Failed to submit score');
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && error.response && error.response.status === 400) {
+        setErrorMessage('User has already submitted a score');
+      } else {
+        console.error('Error submitting score:', error);
+        setErrorMessage('Failed to submit score');
+      }
     }
   };
 
