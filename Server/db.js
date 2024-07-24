@@ -1,4 +1,3 @@
-// db.js
 const { Pool } = require('pg');
 
 //เป็น Database ที่ผมทำขึ้นมาเพื่อ test

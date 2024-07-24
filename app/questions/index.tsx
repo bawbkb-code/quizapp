@@ -29,7 +29,6 @@ const QuestionScreen = () => {
       try {
         const response = await axios.get('http://localhost:3000/questions');
         const data: Question[] = response.data;
-        // Shuffle answers only once when fetching questions
         data.forEach(question => {
           question.answers = shuffleArray(question.answers);
         });

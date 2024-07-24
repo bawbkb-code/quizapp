@@ -1,4 +1,3 @@
-// index.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const pool = require('./db');
@@ -6,12 +5,12 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
-// Route to get questions
+
 app.get('/questions', async (req, res) => {
   try {
     const questionsResult = await pool.query('SELECT * FROM questions');
@@ -29,12 +28,11 @@ app.get('/questions', async (req, res) => {
   }
 });
 
-// Route to save score
 app.post('/save-score', async (req, res) => {
   const { username, score } = req.body;
 
   try {
-    // Find user by username or create if not exists
+
     let userResult = await pool.query('SELECT user_id FROM users WHERE username = $1', [username]);
     let userId;
     if (userResult.rows.length === 0) {
@@ -42,7 +40,7 @@ app.post('/save-score', async (req, res) => {
     }
     userId = userResult.rows[0].user_id;
 
-    // Save score
+
     await pool.query('INSERT INTO scores (user_id, score) VALUES ($1, $2)', [userId, score]);
     res.send('Score saved');
   } catch (err) {
@@ -51,7 +49,6 @@ app.post('/save-score', async (req, res) => {
   }
 });
 
-// Route to get scores
 app.get('/scores', async (req, res) => {
   try {
     const scoresResult = await pool.query(`
