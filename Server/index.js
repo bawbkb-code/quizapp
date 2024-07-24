@@ -5,6 +5,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const shuffleArray = (array) => array.sort(() => Math.random() - 0.5);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -14,12 +15,15 @@ app.use(cors());
 app.get('/questions', async (req, res) => {
   try {
     const questionsResult = await pool.query('SELECT * FROM questions');
-    const questions = questionsResult.rows;
+    let questions = questionsResult.rows;
 
     for (const question of questions) {
       const answersResult = await pool.query('SELECT * FROM answers WHERE question_id = $1', [question.question_id]);
       question.answers = answersResult.rows;
     }
+
+    // Shuffle questions and take first 20
+    questions = shuffleArray(questions).slice(0, 20);
 
     res.json(questions);
   } catch (err) {
